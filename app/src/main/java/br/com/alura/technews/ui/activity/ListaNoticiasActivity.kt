@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager.VERTICAL
@@ -24,14 +23,14 @@ private const val MENSAGEM_FALHA_CARREGAR_NOTICIAS = "Não foi possível carrega
 
 class ListaNoticiasActivity : AppCompatActivity() {
 
- /*   private val repository by lazy {
-        NoticiaRepository(AppDatabase.getInstance(this).noticiaDAO)
-    }*/
+    /*   private val repository by lazy {
+           NoticiaRepository(AppDatabase.getInstance(this).noticiaDAO)
+       }*/
     private val adapter by lazy {
         ListaNoticiasAdapter(context = this)
     }
 
-    private val viewModel by lazy{
+    private val viewModel by lazy {
         val repository = NoticiaRepository(AppDatabase.getInstance(this).noticiaDAO)
         val factory = ListaNoticiasViewModelFactory(repository)
         val provedor = ViewModelProviders.of(this, factory)
@@ -72,16 +71,16 @@ class ListaNoticiasActivity : AppCompatActivity() {
     }
 
     private fun buscaNoticias() {
-        viewModel.buscaTodos().observe(this, Observer {listaNoticias ->
+        viewModel.buscaTodos().observe(this, Observer { resource ->
             Log.i("teste", "atualizando noticia")
-            adapter.atualiza(listaNoticias)
+            resource.dado?.let {
+                adapter.atualiza(it)
+            }
+            resource.erro?.let {
+                mostraErro(MENSAGEM_FALHA_CARREGAR_NOTICIAS)
+            }
+
         })
-            /* quandoSucesso = {
-                 Log.i("teste", "atualizando noticia")
-                 adapter.atualiza(it)
-             }, quandoFalha = {
-                 mostraErro(MENSAGEM_FALHA_CARREGAR_NOTICIAS)
-             }*/
     }
 
     private fun abreFormularioModoCriacao() {
