@@ -14,57 +14,69 @@ class NoticiaRepository(
 ) {
     private val noticiasEncontradas = MutableLiveData<Resource<List<Noticia>?>>()
 
-    fun buscaTodos() : LiveData<Resource<List<Noticia>?>> {
-        buscaInterno(quandoSucesso = {
+    fun buscaTodos(): LiveData<Resource<List<Noticia>?>> {
+
+        val atualizaListaNoticias: (List<Noticia>) -> Unit = {
             noticiasEncontradas.value = Resource(dado = it)
-        })
-        buscaNaApi(quandoSucesso = {
-            noticiasEncontradas.value = Resource(dado = it)
-        }, quandoFalha = {
+        }
+
+        buscaInterno(quandoSucesso = atualizaListaNoticias)
+        buscaNaApi(quandoSucesso = atualizaListaNoticias, quandoFalha = { erro ->
             val resourceAtual = noticiasEncontradas.value
-            val resourceCriado: Resource<List<Noticia>?> = if(resourceAtual != null) {
-                Resource(dado = resourceAtual.dado, erro = it)
-            } else {
-                Resource(dado = null, erro = it)
-            }
-            noticiasEncontradas.value = resourceCriado
+            val resourceDeFalha =
+                criaResourceFalha<List<Noticia>?>(
+                    resourceAtual, erro
+                )
+            noticiasEncontradas.value = resourceDeFalha
         })
         return noticiasEncontradas
     }
 
+
     fun salva(
-        noticia: Noticia,
-        quandoSucesso: (noticiaNova: Noticia) -> Unit,
-        quandoFalha: (erro: String?) -> Unit
-    ) {
-        salvaNaApi(noticia, quandoSucesso, quandoFalha)
+        noticia: Noticia
+    ): LiveData<Resource<Void?>> {
+        val liveData = MutableLiveData<Resource<Void?>>()
+        salvaNaApi(noticia, quandoSucesso = {
+            liveData.value = Resource(null)
+        }, quandoFalha = { erro ->
+            liveData.value = Resource(null, erro = erro)
+        })
+
+        return liveData
     }
 
-    fun remove(
-        noticia: Noticia,
-        quandoSucesso: () -> Unit,
-        quandoFalha: (erro: String?) -> Unit
-    ) {
-        removeNaApi(noticia, quandoSucesso, quandoFalha)
+    fun remove(noticia: Noticia) : LiveData<Resource<Void?>>{
+        val liveData = MutableLiveData<Resource<Void?>>()
+        removeNaApi(noticia, quandoSucesso = {
+            liveData.value = Resource(null)
+        }, quandoFalha = { erro ->
+            liveData.value = Resource(null, erro = erro)
+        })
+        return liveData
     }
 
-    fun edita(
-        noticia: Noticia,
-        quandoSucesso: (noticiaEditada: Noticia) -> Unit,
-        quandoFalha: (erro: String?) -> Unit
-    ) {
-        editaNaApi(noticia, quandoSucesso, quandoFalha)
+
+    fun edita(noticia: Noticia): LiveData<Resource<Void?>> {
+        val liveData = MutableLiveData<Resource<Void?>>()
+        editaNaApi(noticia, quandoSucesso = {
+            liveData.value = Resource(null)
+        }, quandoFalha = { erro ->
+            liveData.value = Resource(null, erro = erro)
+        })
+        return liveData
     }
 
-    fun buscaPorId(
-        noticiaId: Long,
-        quandoSucesso: (noticiaEncontrada: Noticia?) -> Unit
-    ) {
+    fun buscaPorId(noticiaId: Long): LiveData<Noticia?> {
+        val liveData = MutableLiveData<Noticia?>()
         BaseAsyncTask(quandoExecuta = {
             dao.buscaPorId(noticiaId)
-        }, quandoFinaliza = quandoSucesso)
-            .execute()
+        }, quandoFinaliza = {
+            liveData.value = it
+        }).execute()
+        return liveData
     }
+
 
     private fun buscaNaApi(
         quandoSucesso: (List<Noticia>) -> Unit,
