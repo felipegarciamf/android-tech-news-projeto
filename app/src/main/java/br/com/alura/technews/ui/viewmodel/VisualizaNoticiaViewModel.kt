@@ -13,13 +13,13 @@ class VisualizaNoticiaViewModel(
 ) : ViewModel() {
 
 
-    private val noticiaEncontrada = buscaPorId()
+    val noticiaEncontrada = repository.buscaPorId(id)
 
     init {
         Log.i("Visualiza Noticia", "Entrou no visualiza")
     }
 
-    fun buscaPorId() = repository.buscaPorId(id)
+
 
 
     fun remove(): LiveData<Resource<Void?>> {

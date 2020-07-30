@@ -36,14 +36,10 @@ class ListaNoticiasActivity : AppCompatActivity() {
         title = TITULO_APPBAR
         configuraRecyclerView()
         configuraFabAdicionaNoticia()
-
+        buscaNoticias()
         Log.i("viewmodel", viewModel.toString())
     }
 
-    override fun onResume() {
-        super.onResume()
-        buscaNoticias()
-    }
 
     private fun configuraFabAdicionaNoticia() {
         activity_lista_noticias_fab_salva_noticia.setOnClickListener {
